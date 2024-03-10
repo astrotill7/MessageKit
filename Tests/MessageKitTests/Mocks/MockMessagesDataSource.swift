@@ -24,7 +24,7 @@ import Foundation
 @testable import MessageKit
 
 class MockMessagesDataSource: MessagesDataSource {
-  var messages: [MessageType] = []
+  var messages: [any MessageType] = []
   let senders: [MockUser] = [
     MockUser(senderId: "sender_1", displayName: "Sender 1"),
     MockUser(senderId: "sender_2", displayName: "Sender 2"),
@@ -42,7 +42,7 @@ class MockMessagesDataSource: MessagesDataSource {
     messages.count
   }
 
-  func messageForItem(at indexPath: IndexPath, in _: MessagesCollectionView) -> MessageType {
+  func messageForItem(at indexPath: IndexPath, in _: MessagesCollectionView) -> any MessageType {
     messages[indexPath.section]
   }
 }

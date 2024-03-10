@@ -26,45 +26,85 @@ import UIKit
 // MARK: - Typing Indicator API
 
 extension MessagesViewController {
-  // MARK: Open
-
-  /// Sets the typing indicator sate by inserting/deleting the `TypingBubbleCell`
-  ///
-  /// - Parameters:
-  ///   - isHidden: A Boolean value that is to be the new state of the typing indicator
-  ///   - animated: A Boolean value determining if the insertion is to be animated
-  ///   - updates: A block of code that will be executed during `performBatchUpdates`
-  ///              when `animated` is `TRUE` or before the `completion` block executes
-  ///              when `animated` is `FALSE`
-  ///   - completion: A completion block to execute after the insertion/deletion
-  @objc
-  open func setTypingIndicatorViewHidden(
-    _ isHidden: Bool,
-    animated: Bool,
-    whilePerforming updates: (() -> Void)? = nil,
-    completion: ((Bool) -> Void)? = nil)
-  {
-    guard isTypingIndicatorHidden != isHidden else {
-      completion?(false)
-      return
+    
+    internal var typingSection: (MessageSection, [MessageTypeItem]) {
+        let section = TypingIndicatorSection.shared.section
+        let item = TypingIndicatorSection.shared.items
+        return (section, item)
     }
-
-    let section = messagesCollectionView.numberOfSections
-
-    if animated {
-      messagesCollectionView.performBatchUpdates({ [weak self] in
-        self?.messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
-        self?.performUpdatesForTypingIndicatorVisability(at: section)
-        updates?()
-      }, completion: completion)
-    } else {
-      messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
-      performUpdatesForTypingIndicatorVisability(at: section)
-      updates?()
-      completion?(true)
+    
+    // MARK: Open
+    
+    /// Sets the typing indicator sate by inserting/deleting the `TypingBubbleCell`
+    ///
+    /// - Parameters:
+    ///   - isHidden: A Boolean value that is to be the new state of the typing indicator
+    ///   - animated: A Boolean value determining if the insertion is to be animated
+    ///   - updates: A block of code that will be executed during `performBatchUpdates`
+    ///              when `animated` is `TRUE` or before the `completion` block executes
+    ///              when `animated` is `FALSE`
+    ///   - completion: A completion block to execute after the insertion/deletion
+    @objc
+    open func setTypingIndicatorViewHidden(
+        _ isHidden: Bool,
+        animated: Bool,
+        whilePerforming updates: (() -> Void)? = nil,
+        completion: ((Bool) -> Void)? = nil)
+    {
+        if let companion = messagesCollectionView.diffableMessagesDataSource {
+            setTypingIndicatorViewHiddenForSnapshot(
+                isHidden,
+                for: companion,
+                animated: animated
+            )
+            return
+        }
+        
+        guard isTypingIndicatorHidden != isHidden else {
+            completion?(false)
+            return
+        }
+        
+        let section = messagesCollectionView.numberOfSections
+        
+        if animated {
+            messagesCollectionView.performBatchUpdates({ [weak self] in
+                self?.messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
+                self?.performUpdatesForTypingIndicatorVisability(at: section)
+                updates?()
+            }, completion: completion)
+        } else {
+            messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
+            performUpdatesForTypingIndicatorVisability(at: section)
+            updates?()
+            completion?(true)
+        }
     }
-  }
+    
+    open func setTypingIndicatorViewHiddenForSnapshot(
+        _ isHidden: Bool,
+        for companion: MessagesDiffableDataSource,
+        animated: Bool,
+        whilePerforming updates: (() -> Void)? = nil,
+        completion: ((Bool) -> Void)? = nil)
+    {
+        let diffableDataSource = companion.diffableDataSource
 
+        if animated {
+            self.messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
+            let snapshot = performUpdatesForTypingIndicatorVisabilityForSnapshot(in: companion)
+            diffableDataSource.apply(snapshot, animatingDifferences: animated)
+            updates?()
+            completion?(true)
+        } else {
+            self.messagesCollectionView.setTypingIndicatorViewHidden(isHidden)
+            let snapshot = performUpdatesForTypingIndicatorVisabilityForSnapshot(in: companion)
+            diffableDataSource.apply(snapshot, animatingDifferences: animated)
+            updates?()
+            completion?(true)
+        }
+    }
+  
   // MARK: Public
 
   public var isTypingIndicatorHidden: Bool {
@@ -78,7 +118,11 @@ extension MessagesViewController {
   /// - Parameter section
   /// - Returns: A Boolean indicating if the TypingIndicator should be presented at the given section
   public func isSectionReservedForTypingIndicator(_ section: Int) -> Bool {
-    !messagesCollectionView.isTypingIndicatorHidden && section == numberOfSections(in: messagesCollectionView) - 1
+      if let diffableDataSource = messagesCollectionView.diffableMessagesDataSource {
+         let sectionCount = diffableDataSource.diffableDataSource.snapshot().numberOfSections
+         return !messagesCollectionView.isTypingIndicatorHidden && section == sectionCount - 1
+      }
+      return !messagesCollectionView.isTypingIndicatorHidden && section == numberOfSections(in: messagesCollectionView) - 1
   }
 
   // MARK: Private
@@ -86,11 +130,33 @@ extension MessagesViewController {
   /// Performs a delete or insert on the `MessagesCollectionView` on the provided section
   ///
   /// - Parameter section: The index to modify
-  private func performUpdatesForTypingIndicatorVisability(at section: Int) {
-    if isTypingIndicatorHidden {
-      messagesCollectionView.deleteSections([section - 1])
-    } else {
-      messagesCollectionView.insertSections([section])
+    private func performUpdatesForTypingIndicatorVisability(at section: Int){
+        if isTypingIndicatorHidden {
+          messagesCollectionView.deleteSections([section - 1])
+        } else {
+            messagesCollectionView.insertSections([section])
+        }
+     
     }
-  }
+    
+    private func performUpdatesForTypingIndicatorVisabilityForSnapshot(
+        in messageSource: MessagesDiffableDataSource) -> NSDiffableDataSourceSnapshot<MessageSection, MessageTypeItem> {
+        
+        var messageSource = messageSource.diffableDataSource.snapshot()
+        
+        let (typingSection, typingItems) = typingSection
+        
+        if let identifiers = messageSource.sectionIdentifiers.first(where: { $0 == typingSection }), isTypingIndicatorHidden {
+            messageSource.deleteSections([typingSection])
+        }
+        else {
+            messageSource.appendSections([typingSection])
+            messageSource.appendItems(typingItems, toSection: typingSection)
+        }
+        
+        return messageSource
+        
+    }
+    
+    
 }

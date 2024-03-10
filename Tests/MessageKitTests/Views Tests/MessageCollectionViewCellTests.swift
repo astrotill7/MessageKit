@@ -76,7 +76,7 @@ final class MessageContentCellTests: XCTestCase {
 extension MessageContentCellTests {
   private class MockMessagesDisplayDelegate: MessagesDisplayDelegate {
     func snapshotOptionsForLocation(
-      message _: MessageType,
+      message _: any MessageType,
       at _: IndexPath,
       in _: MessagesCollectionView)
       -> LocationMessageSnapshotOptions

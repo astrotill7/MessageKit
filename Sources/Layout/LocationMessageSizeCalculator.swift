@@ -24,7 +24,7 @@ import Foundation
 import UIKit
 
 open class LocationMessageSizeCalculator: MessageSizeCalculator {
-  open override func messageContainerSize(for message: MessageType, at indexPath: IndexPath) -> CGSize {
+  open override func messageContainerSize(for message: any MessageType, at indexPath: IndexPath) -> CGSize {
     switch message.kind {
     case .location(let item):
       let maxWidth = messageContainerMaxWidth(for: message, at: indexPath)

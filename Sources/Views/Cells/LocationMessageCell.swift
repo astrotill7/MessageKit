@@ -53,7 +53,7 @@ open class LocationMessageCell: MessageContentCell {
   }
 
   open override func configure(
-    with message: MessageType,
+    with message: any MessageType,
     at indexPath: IndexPath,
     and messagesCollectionView: MessagesCollectionView)
   {

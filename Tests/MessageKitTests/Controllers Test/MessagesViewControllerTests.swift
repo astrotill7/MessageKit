@@ -257,7 +257,7 @@ final class MessagesViewControllerTests: XCTestCase {
 
   // MARK: - Assistants
 
-  private func makeMessages(for senders: [MockUser]) -> [MessageType] {
+  private func makeMessages(for senders: [MockUser]) -> [any MessageType] {
     [
       MockMessage(text: "Text 1", user: senders[0], messageId: "test_id_1"),
       MockMessage(text: "Text 2", user: senders[1], messageId: "test_id_2"),
@@ -270,16 +270,16 @@ final class MessagesViewControllerTests: XCTestCase {
 private class MockLayoutDelegate: MessagesLayoutDelegate, MessagesDisplayDelegate {
   // MARK: - LocationMessageLayoutDelegate
 
-  func heightForLocation(message _: MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
+  func heightForLocation(message _: any MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
     0.0
   }
 
-  func heightForMedia(message _: MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
+  func heightForMedia(message _: any MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
     10.0
   }
 
   func snapshotOptionsForLocation(
-    message _: MessageType,
+    message _: any MessageType,
     at _: IndexPath,
     in _: MessagesCollectionView)
     -> LocationMessageSnapshotOptions

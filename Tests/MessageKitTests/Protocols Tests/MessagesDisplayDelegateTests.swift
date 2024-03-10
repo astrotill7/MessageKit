@@ -208,7 +208,7 @@ private class MockMessagesViewController: MessagesViewController, MessagesDispla
 
   var dataProvider: MockMessagesDataSource!
 
-  func heightForLocation(message _: MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
+  func heightForLocation(message _: any MessageType, at _: IndexPath, with _: CGFloat, in _: MessagesCollectionView) -> CGFloat {
     200
   }
 
@@ -223,7 +223,7 @@ private class MockMessagesViewController: MessagesViewController, MessagesDispla
   }
 
   func snapshotOptionsForLocation(
-    message _: MessageType,
+    message _: any MessageType,
     at _: IndexPath,
     in _: MessagesCollectionView)
     -> LocationMessageSnapshotOptions

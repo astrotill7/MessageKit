@@ -134,8 +134,9 @@ open class MessageContentCell: MessageCollectionViewCell {
   ///   - message: The `MessageType` this cell displays.
   ///   - indexPath: The `IndexPath` for this cell.
   ///   - messagesCollectionView: The `MessagesCollectionView` in which this cell is contained.
-  open func configure(with message: MessageType, at indexPath: IndexPath, and messagesCollectionView: MessagesCollectionView) {
-    guard let dataSource = messagesCollectionView.messagesDataSource else {
+  open func configure(with message: any MessageType, at indexPath: IndexPath, and messagesCollectionView: MessagesCollectionView) {
+      
+      guard let dataSource = messagesCollectionView.messagesDataSource ?? messagesCollectionView.diffableMessagesDataSource else {
       fatalError(MessageKitError.nilMessagesDataSource)
     }
     guard let displayDelegate = messagesCollectionView.messagesDisplayDelegate else {
